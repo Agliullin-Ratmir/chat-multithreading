@@ -4,6 +4,8 @@ import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 
 public class SocketServer {
     private Socket          socket   = null;
@@ -11,6 +13,8 @@ public class SocketServer {
     private DataInputStream in       =  null;
     private DataOutputStream out     = null;
 
+
+    //refactoring+make a bus for private messages
     // constructor with port
     public SocketServer(int port)
     {
@@ -29,24 +33,17 @@ public class SocketServer {
             in = new DataInputStream(
                     new BufferedInputStream(socket.getInputStream()));
 
-            String line = "";
             // sends output to the socket
-            out    = new DataOutputStream(socket.getOutputStream());
+            String line = in.readUTF();
+            System.out.println("User " + line + " has been registered");
+            String message = in.readUTF();
+            System.out.println("This message has been received: " + message);
+            out  = new DataOutputStream(socket.getOutputStream());
             // reads message from client until "Over" is sent
-            while (!line.equals("Over"))
-            {
-                try
-                {
-                    line = in.readUTF();
-                    System.out.println(new JSONObject(line).get("message"));
-                    out.writeUTF("I got the message");
-
-                }
-                catch(IOException i)
-                {
-                    System.out.println(i);
-                }
-            }
+//            List<String> userNames = getListUsers(in);
+//            userNames.stream().forEach(s -> System.out.println(s));
+            out.writeUTF(message);
+            out.writeUTF(getPrivateMessage().toString());
             System.out.println("Closing connection");
 
             // close connection
@@ -77,5 +74,15 @@ public class SocketServer {
         json.put("consumer", "user1");
         json.put("message", "this is a message for user1");
         return json;
+    }
+
+    private List<String> getListUsers(DataInputStream in) throws IOException {
+        List<String> list = new ArrayList<>();
+        for(int i=0; i < 3; i++) {
+            String userName = in.readUTF();
+            list.add(userName);
+            System.out.println("User " + userName + "is written");
+        }
+        return list;
     }
 }

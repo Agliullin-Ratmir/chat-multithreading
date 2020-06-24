@@ -13,7 +13,7 @@ public class SocketClient {
     private DataInputStream in       =  null;
 
     // constructor to put ip address and port
-    public SocketClient(String address, int port) throws IOException {
+    public SocketClient(String address, int port, int index) throws IOException {
         // establish a connection
         try
         {
@@ -36,23 +36,18 @@ public class SocketClient {
         }
 
         // string to read message from input
-        String line = "";
         in = new DataInputStream(
                 new BufferedInputStream(socket.getInputStream()));
         // keep reading until "Over" is input
-        while (!line.equals("Over"))
-        {
-            try
-            {
-                line = input.readLine();
-                out.writeUTF(getBroadcastMessage().toString());
-                System.out.println(in.readUTF());
-            }
-            catch(IOException i)
-            {
-                System.out.println(i);
-            }
-        }
+        System.out.println("Put your name for user №" + index);
+        String currentUser = input.readLine();
+        out.writeUTF(currentUser);
+        //send broadcast message
+        out.writeUTF(getBroadcastMessage().toString());
+        String firstMessage = in.readUTF();
+        retrivingMessage(currentUser, firstMessage);
+        String responseString = in.readUTF();
+        retrivingMessage(currentUser, responseString);
 
         // close the connection
         try
@@ -68,7 +63,22 @@ public class SocketClient {
     }
 
     public static void main(String[] args) throws IOException {
-        SocketClient client = new SocketClient("127.0.0.1", 5000);
+        SocketClient client = new SocketClient("127.0.0.1", 5000, 1);
+    }
+
+    private void retrivingMessage(String currentUser, String message) {
+        JSONObject json = new JSONObject(message);
+        if ("broadcast".equals(json.get("mode"))) {
+            System.out.println("This message for everyone: "
+            + json.get("message"));
+        } else {
+            if ("private".equals(json.get("mode")) &&
+                    currentUser.equals(json.get("consumer"))) {
+                System.out.println(json.get("message"));
+            } else {
+                System.out.println("There are no messages for the user " + currentUser);
+            }
+        }
     }
 
     private static JSONObject getBroadcastMessage() {
