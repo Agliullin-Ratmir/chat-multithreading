@@ -14,11 +14,8 @@ public class SocketServer {
     private DataOutputStream out     = null;
 
 
-    //refactoring+make a bus for private messages
-    // constructor with port
     public SocketServer(int port)
     {
-        // starts server and waits for a connection
         try
         {
             server = new ServerSocket(port);
@@ -29,19 +26,18 @@ public class SocketServer {
             socket = server.accept();
             System.out.println("Client accepted");
 
-            // takes input from the client socket
+
             in = new DataInputStream(
                     new BufferedInputStream(socket.getInputStream()));
-
-            // sends output to the socket
-            String line = in.readUTF();
-            System.out.println("User " + line + " has been registered");
+            String userName = null;
+            for (int i = 0; i < 3; i++) {
+                userName = in.readUTF();
+                System.out.println("User " + userName + " has been registered");
+            }
             String message = in.readUTF();
             System.out.println("This message has been received: " + message);
             out  = new DataOutputStream(socket.getOutputStream());
-            // reads message from client until "Over" is sent
-//            List<String> userNames = getListUsers(in);
-//            userNames.stream().forEach(s -> System.out.println(s));
+
             out.writeUTF(message);
             out.writeUTF(getPrivateMessage().toString());
             System.out.println("Closing connection");
